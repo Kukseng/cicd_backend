@@ -1,29 +1,17 @@
-FROM openjdk:17-jdk-slim AS builder
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
-# Copy Gradle wrapper and build files
+# Copy Gradle wrapper and files
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
+COPY src src
 
 RUN chmod +x ./gradlew
 
-# Download dependencies
-RUN ./gradlew dependencies --no-daemon
+# Build the application (skip tests to avoid Redis connection)
+RUN ./gradlew bootJar --no-daemon -x test
 
-# Copy source code
-COPY src src
-
-# Build with build profile (skip tests that require external services)
-RUN ./gradlew bootJar --no-daemon -Dspring.profiles.active=build -x test
-
-# Runtime stage
-FROM openjdk:17-jre-slim
-WORKDIR /app
-
-# Copy the JAR from builder stage
-COPY --from=builder /app/build/libs/*.jar app.jar
-
-# Run the application (will use default profile with external Redis)
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the JAR
+ENTRYPOINT ["java", "-jar", "build/libs/stackquiz-api-0.0.1-SNAPSHOT.jar"]
