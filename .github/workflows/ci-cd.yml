@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Temporary Postgres for CI testing
+      # Postgres 
       postgres:
         image: postgres:17
         env:
@@ -18,21 +18,13 @@ jobs:
           POSTGRES_PASSWORD: stackquiz@123
           POSTGRES_DB: stackquiz-db
         ports: ["5432:5432"]
-        # options: >-
-        #   --health-cmd="pg_isready -U stackquiz-user"
-        #   --health-interval=10s
-        #   --health-timeout=5s
-        #   --health-retries=5
+ 
 
-      # Temporary Redis for CI testing
+      # Redis 
       redis:
         image: redis:7
         ports: ["6379:6379"]
-        # options: >-
-        #   --health-cmd "redis-cli ping || exit 1"
-        #   --health-interval=10s
-        #   --health-timeout=5s
-        #   --health-retries=5
+     
 
     steps:
       # Checkout code
