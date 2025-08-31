@@ -67,6 +67,13 @@ jobs:
       # Push Docker Image to DockerHub
       - name: Push Docker image
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker tag stackquiz-backend:latest ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
+          echo "${{ secrets.PASSWORD }}" | docker login -u ${{ secrets.USERNAME }} --password-stdin
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} .
+      - name: Push the Docker image 
+        run: |
+          docker push ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }}
+      - name: Logout from the Registry
+        if: always()
+        run: |
+          docker logout 
