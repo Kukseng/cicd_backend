@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:24-jdk-alpine
 WORKDIR /app
 
 # Use wildcard to match any JAR file
