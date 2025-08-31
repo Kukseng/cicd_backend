@@ -39,12 +39,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Setup Java (for Spring Boot)
+      # Setup Java
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      # Make Gradle wrapper executable
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
 
       # Build & Test
       - name: Build & Test
@@ -60,21 +64,9 @@ jobs:
       - name: Build Docker image
         run: docker build -t stackquiz-backend:latest .
 
-    #   # Push Docker Image to DockerHub
-    #   - name: Push Docker image
-    #     run: |
-    #       echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-    #       docker tag stackquiz-backend:latest ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
-    #       docker push ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
-
-    #   # Deploy Backend to VM
-    #   - name: Deploy Backend on VM
-    #     uses: appleboy/ssh-action@v1.0.0
-    #     with:
-    #       host: ${{ secrets.VM_HOST }}
-    #       username: ${{ secrets.VM_USER }}
-    #       key: ${{ secrets.SSH_KEY }}
-    #       script: |
-    #         cd /home/${{ secrets.VM_USER }}/app
-    #         docker pull ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
-    #         docker compose up -d backend
+      # Push Docker Image to DockerHub
+      - name: Push Docker image
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker tag stackquiz-backend:latest ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
