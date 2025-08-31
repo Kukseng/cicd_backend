@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Postgres 
+      # Postgres
       postgres:
         image: postgres:17
         env:
@@ -18,8 +18,13 @@ jobs:
           POSTGRES_PASSWORD: stackquiz@123
           POSTGRES_DB: stackquiz-db
         ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U stackquiz-user -d stackquiz-db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
 
-      # Redis 
+      # Redis
       redis:
         image: redis:7
         ports: ["6379:6379"]
@@ -34,7 +39,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       # Make Gradle wrapper executable
       - name: Make Gradle wrapper executable
@@ -59,6 +64,6 @@ jobs:
       # Push Docker Image to DockerHub
       - name: Push Docker image
         run: |
-         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-         docker tag stackquiz-backend:latest ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
-         docker push ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker tag stackquiz-backend:latest ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/stackquiz-backend:latest

@@ -4,4 +4,5 @@ WORKDIR /app
 # Use wildcard to match any JAR file
 COPY build/libs/*.jar app.jar
 
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
