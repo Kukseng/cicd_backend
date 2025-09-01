@@ -27,32 +27,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(CreateUserRequest createUserRequest) {
         try {
-            if (createUserRequest == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User request cannot be null");
+            if (userRepository.existsByEmail(createUserRequest.email())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "Email already exists"
+                );
             }
-            if (createUserRequest.firstName() == null || createUserRequest.firstName().trim().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "First name cannot be null or empty");
+            if (createUserRequest.firstName().isEmpty() || createUserRequest.lastName().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "First name or last name cannot be empty");
             }
-            if (createUserRequest.lastName() == null || createUserRequest.lastName().trim().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Last name cannot be null or empty");
-            }
-            if (createUserRequest.email() == null || createUserRequest.email().trim().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email cannot be null or empty");
-            }
-            if (createUserRequest.password() == null || createUserRequest.password().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be null or empty");
-            }
-            if (createUserRequest.password().length() < 8) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters");
+            if (createUserRequest.email().isEmpty() || createUserRequest.password().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email or password cannot be empty");
             }
 
-            if (userRepository.existsByEmail(createUserRequest.email().trim())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
+            if (createUserRequest.password().length() < 8) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Password must be at least 8 characters");
             }
 
             User user = userMapper.fromCreateUserRequest(createUserRequest);
-            user.setCreatedAt(LocalDateTime.now());
             user.setIsActive(true);
+            user.setCreatedAt(LocalDateTime.now());
             User savedUser = userRepository.save(user);
             return userMapper.toUserResponse(savedUser);
 
@@ -67,13 +62,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getUserById(String userId) {
         try {
-            if (userId == null || userId.trim().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID cannot be null or empty");
+            if (userId == null || userId.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "User ID cannot be null or empty"
+                );
             }
-
             return userRepository.findByIdAndIsActiveTrue(userId)
                     .map(userMapper::toUserResponse)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or inactive"));
+                    .orElseThrow(() ->
+                            new ResponseStatusException(HttpStatus.NOT_FOUND, "User id not found")
+                    );
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -85,25 +84,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateUserByUserId(String userId, UpdateUserRequest updateUserRequest) {
         try {
-            if (userId == null || userId.trim().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID cannot be null or empty");
-            }
-            if (updateUserRequest == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Update request cannot be null");
+            if (userId == null || userId.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "User ID cannot be null or empty");
             }
 
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+            userMapper.toCustomerPartially(updateUserRequest, user);
+
             if (updateUserRequest.email() != null &&
-                    !updateUserRequest.email().trim().isEmpty() &&
-                    !user.getEmail().equals(updateUserRequest.email().trim()) &&
-                    userRepository.existsByEmail(updateUserRequest.email().trim())) {
+                    userRepository.existsByEmail(updateUserRequest.email()) &&
+                    !user.getEmail().equals(updateUserRequest.email())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
             }
-
-            userMapper.toCustomerPartially(updateUserRequest, user);
-            user.setUpdatedAt(LocalDateTime.now());
 
             user = userRepository.save(user);
             return userMapper.toUserResponse(user);
@@ -119,26 +114,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUserByUserId(String userId) {
         try {
-            if (userId == null || userId.trim().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID cannot be null or empty");
+            if (userId == null || userId.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "User ID cannot be null or empty");
             }
-
             if (!userRepository.existsById(userId)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "User ID not found");
             }
-
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-            user.setIsActive(false);
-            user.setUpdatedAt(LocalDateTime.now());
-            userRepository.save(user);
+            userRepository.deleteById(userId);
 
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
             log.error("Unexpected error while deleting user with id {}", userId, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error occurred");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Internal error occurred");
         }
     }
 
@@ -146,7 +137,14 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> findAll() {
         try {
             List<User> users = userRepository.findAllByIsActiveTrue();
-            return users.stream().map(userMapper::toUserResponse).toList();
+            if (users.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found");
+            }
+            return users.stream()
+                    .map(userMapper::toUserResponse)
+                    .toList();
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Unexpected error while fetching users", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error occurred");

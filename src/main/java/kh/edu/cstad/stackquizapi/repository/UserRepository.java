@@ -17,6 +17,8 @@ public interface UserRepository
 
     Optional<User> findByIdAndIsActiveFalse(String  userId);
 
+//    Optional<User> findByIdAndIsActiveTrue(String userId);
+
     List<User> findAllByIsActiveFalse();
 
 //    List<User> findUserByUserId(Integer userId);

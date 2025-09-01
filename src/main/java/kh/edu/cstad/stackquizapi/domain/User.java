@@ -39,6 +39,9 @@ public class User {
     @Column(length = 250)
     private String avatarUrl;
 
+    @Column(length = 250)
+    private String profileUser;
+
     @Column(length = 100)
     private String firstName;
 
