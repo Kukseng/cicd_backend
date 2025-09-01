@@ -21,4 +21,8 @@ public interface UserRepository
 
 //    List<User> findUserByUserId(Integer userId);
 
+    Optional<User> findByIdAndIsActiveTrue (String userId);
+    List<User> findAllByIsActiveTrue ();
+
+
 }

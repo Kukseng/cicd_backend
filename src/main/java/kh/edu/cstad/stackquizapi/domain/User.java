@@ -51,7 +51,7 @@ public class User {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user")
     private List<UserRole> userRoles;
